@@ -15,9 +15,9 @@ import (
 
 const (
 	chainsUrl      = "https://chainid.network/chains.json"
-	chainsName     = "chains.json"
+	chainsJson     = "chains.json"
 	chainsMiniUrl  = "https://chainid.network/chains_mini.json"
-	chainsMiniName = "chains_mini.json"
+	chainsMiniJson = "chains_mini.json"
 )
 
 func getJson(url, name string) error {
@@ -47,7 +47,21 @@ func getJson(url, name string) error {
 	return nil
 }
 
-func getChains[C ChainMini | Chain](url, name string) ([]C, error) {
+func getUrlName[C ChainMini | Chain]() (string, string) {
+	var c0 C
+	switch any(c0).(type) {
+	case ChainMini:
+		return chainsMiniUrl, chainsMiniJson
+	case Chain:
+		return chainsUrl, chainsJson
+	default:
+		return "", ""
+	}
+}
+
+// getChains returns slice of [ChainMini] or [Chain].
+func getChains[C ChainMini | Chain]() ([]C, error) {
+	url, name := getUrlName[C]()
 	exists, err := oshelper.FileExists(name)
 	if err != nil {
 		return nil, err
@@ -70,12 +84,12 @@ func getChains[C ChainMini | Chain](url, name string) ([]C, error) {
 
 // Chains returns slice of [Chain].
 func Chains() ([]Chain, error) {
-	return getChains[Chain](chainsUrl, chainsName)
+	return getChains[Chain]()
 }
 
 // ChainsMini returns slice of [ChainMini].
 func ChainsMini() ([]ChainMini, error) {
-	return getChains[ChainMini](chainsMiniUrl, chainsMiniName)
+	return getChains[ChainMini]()
 }
 
 // ChainById returns [Chain] by 'chainId'.
