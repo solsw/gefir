@@ -47,7 +47,7 @@ func getJson(url, name string) error {
 	return nil
 }
 
-func getUrlName[C ChainMini | Chain]() (string, string) {
+func getUrlAndName[C ChainMini | Chain]() (url string, name string) {
 	var c0 C
 	switch any(c0).(type) {
 	case ChainMini:
@@ -61,7 +61,7 @@ func getUrlName[C ChainMini | Chain]() (string, string) {
 
 // getChains returns slice of [ChainMini] or [Chain].
 func getChains[C ChainMini | Chain]() ([]C, error) {
-	url, name := getUrlName[C]()
+	url, name := getUrlAndName[C]()
 	exists, err := oshelper.FileExists(name)
 	if err != nil {
 		return nil, err
@@ -83,11 +83,19 @@ func getChains[C ChainMini | Chain]() ([]C, error) {
 }
 
 // Chains returns slice of [Chain].
+//
+// [Chain]s are loaded from 'chains.json' file (if it does not exist,
+// it is downloaded from 'https://chainid.network/chains.json').
+// To renew 'chains.json' file, remove it.
 func Chains() ([]Chain, error) {
 	return getChains[Chain]()
 }
 
 // ChainsMini returns slice of [ChainMini].
+//
+// [ChainMini]s are loaded from 'chains_mini.json' file (if it does not exist,
+// it is downloaded from 'https://chainid.network/chains_mini.json').
+// To renew 'chains_mini.json' file, remove it.
 func ChainsMini() ([]ChainMini, error) {
 	return getChains[ChainMini]()
 }

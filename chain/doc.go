@@ -1,6 +1,4 @@
-// Package chain contains tools to obtain metadata for [Ethereum chains].
-//
-// [Ethereum chains]: https://github.com/ethereum-lists/chains
+// Package chain contains tools to obtain metadata for Ethereum chains.
 package chain
 
 // see:
