@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"slices"
 
 	"github.com/solsw/generichelper"
 	"github.com/solsw/httphelper"
@@ -106,12 +107,14 @@ func ChainById(chainId uint64) (*Chain, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, c := range cc {
-		if c.ChainId == chainId {
-			return &c, nil
-		}
+	i := slices.IndexFunc[[]Chain, Chain](cc,
+		func(c Chain) bool { return c.ChainId == chainId })
+	if i < 0 {
+		return nil, fmt.Errorf("chains: chainId '%d' not found", chainId)
 	}
-	return nil, fmt.Errorf("chainId '%d' not found", chainId)
+	// to not keep the whole slice on the heap
+	c := cc[i]
+	return &c, nil
 }
 
 // ChainMiniById returns [ChainMini] by 'chainId'.
@@ -120,10 +123,12 @@ func ChainMiniById(chainId uint64) (*ChainMini, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, c := range cc {
-		if c.ChainId == chainId {
-			return &c, nil
-		}
+	i := slices.IndexFunc[[]ChainMini, ChainMini](cc,
+		func(c ChainMini) bool { return c.ChainId == chainId })
+	if i < 0 {
+		return nil, fmt.Errorf("chainsmini: chainId '%d' not found", chainId)
 	}
-	return nil, fmt.Errorf("chainId '%d' not found", chainId)
+	// to not keep the whole slice on the heap
+	c := cc[i]
+	return &c, nil
 }

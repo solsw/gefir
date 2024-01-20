@@ -14,6 +14,10 @@ func TestChainMiniById(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
+		{name: "0",
+			args:    args{chainId: 1234567891011121314},
+			wantErr: true,
+		},
 		{name: "Ethereum Mainnet",
 			args: args{chainId: ChainIdEthereumMainnet},
 			want: "Ethereum Mainnet",
@@ -28,6 +32,9 @@ func TestChainMiniById(t *testing.T) {
 			got, err := ChainMiniById(tt.args.chainId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ChainMiniById() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
 				return
 			}
 			if got.Name != tt.want {
