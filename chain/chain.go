@@ -85,7 +85,7 @@ func getChains[C ChainMini | Chain]() ([]C, error) {
 
 // Chains returns slice of [Chain].
 //
-// [Chain]s are loaded from 'chains.json' file (if it does not exist,
+// Chains metadata are loaded from 'chains.json' file (if it does not exist,
 // it is downloaded from 'https://chainid.network/chains.json').
 // To renew 'chains.json' file, remove it.
 func Chains() ([]Chain, error) {
@@ -94,7 +94,7 @@ func Chains() ([]Chain, error) {
 
 // ChainsMini returns slice of [ChainMini].
 //
-// [ChainMini]s are loaded from 'chains_mini.json' file (if it does not exist,
+// ChainsMini metadata are loaded from 'chains_mini.json' file (if it does not exist,
 // it is downloaded from 'https://chainid.network/chains_mini.json').
 // To renew 'chains_mini.json' file, remove it.
 func ChainsMini() ([]ChainMini, error) {
@@ -107,12 +107,11 @@ func ChainById(chainId uint64) (*Chain, error) {
 	if err != nil {
 		return nil, err
 	}
-	i := slices.IndexFunc[[]Chain, Chain](cc,
-		func(c Chain) bool { return c.ChainId == chainId })
+	i := slices.IndexFunc(cc, func(c Chain) bool { return c.ChainId == chainId })
 	if i < 0 {
 		return nil, fmt.Errorf("chains: chainId '%d' not found", chainId)
 	}
-	// to not keep the whole slice on the heap
+	// to not escape the whole slice to the heap
 	c := cc[i]
 	return &c, nil
 }
@@ -123,12 +122,11 @@ func ChainMiniById(chainId uint64) (*ChainMini, error) {
 	if err != nil {
 		return nil, err
 	}
-	i := slices.IndexFunc[[]ChainMini, ChainMini](cc,
-		func(c ChainMini) bool { return c.ChainId == chainId })
+	i := slices.IndexFunc(cc, func(c ChainMini) bool { return c.ChainId == chainId })
 	if i < 0 {
 		return nil, fmt.Errorf("chainsmini: chainId '%d' not found", chainId)
 	}
-	// to not keep the whole slice on the heap
+	// to not escape the whole slice to the heap
 	c := cc[i]
 	return &c, nil
 }
