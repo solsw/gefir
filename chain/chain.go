@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"slices"
 
+	"github.com/solsw/errorhelper"
 	"github.com/solsw/generichelper"
 	"github.com/solsw/httphelper"
 	"github.com/solsw/jsonhelper"
@@ -61,18 +63,19 @@ func getUrlAndName[C ChainMini | Chain]() (url string, name string) {
 }
 
 // getChains returns slice of [ChainMini] or [Chain].
-func getChains[C ChainMini | Chain]() ([]C, error) {
+func getChains[C ChainMini | Chain](dir string) ([]C, error) {
 	url, name := getUrlAndName[C]()
-	exists, err := oshelper.FileExists(name)
+	fullname := filepath.Join(dir, name)
+	exists, err := oshelper.FileExists(fullname)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
-		if err := getJson(url, name); err != nil {
+		if err := getJson(url, fullname); err != nil {
 			return nil, err
 		}
 	}
-	bb, err := os.ReadFile(name)
+	bb, err := os.ReadFile(fullname)
 	if err != nil {
 		return nil, err
 	}
@@ -83,33 +86,69 @@ func getChains[C ChainMini | Chain]() ([]C, error) {
 	return cc, nil
 }
 
+// ChainsDir returns slice of [Chain].
+//
+// Chains data are loaded from 'chains.json' file in 'dir' directory
+// (if it does not exist, it is downloaded from 'https://chainid.network/chains.json').
+// To renew 'chains.json' file, remove it.
+func ChainsDir(dir string) ([]Chain, error) {
+	cc, err := getChains[Chain](dir)
+	if err != nil {
+		return nil, errorhelper.CallerError(err)
+	}
+	return cc, nil
+}
+
 // Chains returns slice of [Chain].
 //
-// Chains metadata are loaded from 'chains.json' file (if it does not exist,
-// it is downloaded from 'https://chainid.network/chains.json').
+// Chains data are loaded from 'chains.json' file in current directory
+// (if it does not exist, it is downloaded from 'https://chainid.network/chains.json').
 // To renew 'chains.json' file, remove it.
 func Chains() ([]Chain, error) {
-	return getChains[Chain]()
+	cc, err := getChains[Chain](".")
+	if err != nil {
+		return nil, errorhelper.CallerError(err)
+	}
+	return cc, nil
+}
+
+// ChainsMiniDir returns slice of [ChainMini].
+//
+// ChainsMini data are loaded from 'chains_mini.json' file in 'dir' directory
+// (if it does not exist, it is downloaded from 'https://chainid.network/chains_mini.json').
+// To renew 'chains_mini.json' file, remove it.
+func ChainsMiniDir(dir string) ([]ChainMini, error) {
+	cc, err := getChains[ChainMini](dir)
+	if err != nil {
+		return nil, errorhelper.CallerError(err)
+	}
+	return cc, nil
 }
 
 // ChainsMini returns slice of [ChainMini].
 //
-// ChainsMini metadata are loaded from 'chains_mini.json' file (if it does not exist,
-// it is downloaded from 'https://chainid.network/chains_mini.json').
+// ChainsMini data are loaded from 'chains_mini.json' file in current directory
+// (if it does not exist, it is downloaded from 'https://chainid.network/chains_mini.json').
 // To renew 'chains_mini.json' file, remove it.
 func ChainsMini() ([]ChainMini, error) {
-	return getChains[ChainMini]()
+	cc, err := getChains[ChainMini](".")
+	if err != nil {
+		return nil, errorhelper.CallerError(err)
+	}
+	return cc, nil
 }
 
 // ChainById returns [Chain] by 'chainId'.
+//
+// Chains data ('chains.json' file) are stored in current directory.
 func ChainById(chainId uint64) (*Chain, error) {
 	cc, err := Chains()
 	if err != nil {
-		return nil, err
+		return nil, errorhelper.CallerError(err)
 	}
 	i := slices.IndexFunc(cc, func(c Chain) bool { return c.ChainId == chainId })
 	if i < 0 {
-		return nil, fmt.Errorf("chains: chainId '%d' not found", chainId)
+		return nil, errorhelper.CallerError(fmt.Errorf("chainId '%d' not found", chainId))
 	}
 	// to not escape the whole slice to the heap
 	c := cc[i]
@@ -117,14 +156,16 @@ func ChainById(chainId uint64) (*Chain, error) {
 }
 
 // ChainMiniById returns [ChainMini] by 'chainId'.
+//
+// ChainsMini data ('chains_mini.json' file) are stored in current directory.
 func ChainMiniById(chainId uint64) (*ChainMini, error) {
 	cc, err := ChainsMini()
 	if err != nil {
-		return nil, err
+		return nil, errorhelper.CallerError(err)
 	}
 	i := slices.IndexFunc(cc, func(c ChainMini) bool { return c.ChainId == chainId })
 	if i < 0 {
-		return nil, fmt.Errorf("chainsmini: chainId '%d' not found", chainId)
+		return nil, errorhelper.CallerError(fmt.Errorf("chainId '%d' not found", chainId))
 	}
 	// to not escape the whole slice to the heap
 	c := cc[i]
